@@ -1,6 +1,6 @@
 """A UI for scripts. Will be displayed in the tab widget in MainWindow."""
 
-from qtpy.QtWidgets import QWidget, QHBoxLayout, QComboBox
+from qtpy.QtWidgets import QWidget, QHBoxLayout, QComboBox, QPushButton
 
 import ryvencore_qt.src.conv_gui as GUI
 from ryvencore.RC import FlowAlg
@@ -15,6 +15,7 @@ class ScriptUI(QWidget):
         FlowAlg.DATA: 'data-flow',
         FlowAlg.DATA_OPT: 'data-flow opt',
         FlowAlg.EXEC: 'exec-flow',
+        FlowAlg.MANUAL: 'manual',
     }
 
     def __init__(self, main_window, script, flow_view):
@@ -31,10 +32,14 @@ class ScriptUI(QWidget):
         # self.script.flow_view.viewport_update_mode_changed.connect(self.flow_vp_update_mode_changed)
 
         self.flow_alg_mode_dropdown = QComboBox()
+        self.run_button=QPushButton('run')
+        self.run_button.hide()
         for mode, title in self.flow_alg_mode_display_titles.items():
             self.flow_alg_mode_dropdown.addItem(title)
         self.ui.settings_groupBox.layout().addWidget(self.flow_alg_mode_dropdown)
+        self.ui.settings_groupBox.layout().addWidget(self.run_button)
         self.flow_alg_mode_dropdown.currentTextChanged.connect(self.flow_algorithm_mode_toggled)
+        self.run_button.clicked.connect(self.flow_manual_run_triggered)
 
         # catch up on flow modes
         self.flow_alg_mode_changed(self.script.flow.algorithm_mode())
@@ -87,3 +92,14 @@ class ScriptUI(QWidget):
                 [self.flow_alg_mode_dropdown.currentIndex()]
             )
         )
+
+        # Shows or hides the Run button depending on selected mode
+        if self.script.flow.alg_mode == FlowAlg.MANUAL:
+            self.run_button.show()
+        else:
+            self.run_button.hide()
+
+    def flow_manual_run_triggered(self):
+        # UI-triggered method to run the flow manually
+        if self.script.flow.alg_mode == FlowAlg.MANUAL:
+            self.script.flow.triggered_run()
